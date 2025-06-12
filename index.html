@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FM 6-22 Leader Development - Interactive Flashcards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            margin-bottom: 30px;
+        }
+
+        .flashcard {
+            width: 600px;
+            height: 400px;
+            max-width: 90vw;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .card-number {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .card-content {
+            font-size: 18px;
+            line-height: 1.6;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .card-content h3 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .card-content ul {
+            text-align: left;
+            max-width: 500px;
+        }
+
+        .card-content li {
+            margin-bottom: 8px;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .quiz-mode {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .quiz-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .flashcard {
+                width: 350px;
+                height: 450px;
+            }
+
+            .card-content {
+                font-size: 16px;
+            }
+
+            .navigation {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🎖️ FM 6-22 Leader Development</h1>
+        <p>Interactive Flashcards for Army Leadership Training</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-primary" onclick="startStudy()">📚 Study Mode</button>
+        <button class="btn btn-warning" onclick="startQuiz()">🧠 Quiz Mode</button>
+        <button class="btn btn-secondary" onclick="shuffleCards()">🔀 Shuffle</button>
+        <button class="btn btn-secondary" onclick="resetProgress()">🔄 Reset</button>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Card 1 of 20</div>
+    </div>
+
+    <div class="flashcard-container">
+        <div class="flashcard" id="flashcard">
+            <div class="card-face card-front">
+                <div class="card-number" id="cardNumber">1/20</div>
+                <div class="card-content" id="frontContent">
+                    <h3>What is Leader Development according to FM 6-22?</h3>
+                </div>
+            </div>
+            <div class="card-face card-back">
+                <div class="card-number" id="cardNumberBack">1/20</div>
+                <div class="card-content" id="backContent">
+                    <p>The deliberate, continuous, sequential, and progressive process—founded in Army values—that grows
+                        Soldiers and Army Civilians into competent and confident leaders capable of decisive action.
+                        Achieved through life-long synthesis of knowledge, skills, and experiences in institutional,
+                        operational, and self-development domains.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="btn btn-secondary" onclick="previousCard()">⬅️ Previous</button>
+        <button class="btn btn-primary" onclick="flipCard()">🔄 Flip Card</button>
+        <button class="btn btn-secondary" onclick="nextCard()">Next ➡️</button>
+    </div>
+
+    <div class="quiz-mode" id="quizMode" style="display: none;">
+        <div class="score" id="scoreDisplay">Score: 0/0</div>
+        <p>Did you know the answer before flipping?</p>
+        <div class="quiz-buttons">
+            <button class="btn btn-success" onclick="markCorrect()">✅ Got it right!</button>
+            <button class="btn btn-danger" onclick="markIncorrect()">❌ Need to study</button>
+        </div>
+    </div>
+
+    <script>
+        let flashcards = [
+            {
+                front: "What is Leader Development according to FM 6-22?",
+                back: "The deliberate, continuous, sequential, and progressive process—founded in Army values—that grows Soldiers and Army Civilians into competent and confident leaders capable of decisive action. Achieved through life-long synthesis of knowledge, skills, and experiences in institutional, operational, and self-development domains."
+            },
+            {
+                front: "What are the five tenets of Army Leader Development?",
+                back: `<ul>
+                    <li><strong>1.</strong> Strong commitment by Army, superiors, and individuals</li>
+                    <li><strong>2.</strong> Clear purpose for what, when, and how to develop leadership</li>
+                    <li><strong>3.</strong> Supportive relationships and culture of learning</li>
+                    <li><strong>4.</strong> Three mutually supportive domains (institutional, operational, self-development)</li>
+                    <li><strong>5.</strong> Providing, accepting, and acting upon candid assessment and feedback</li>
+                </ul>`
+            },
+            {
+                front: "What are the three categories of Leader Attributes in the Army Leadership Requirements Model?",
+                back: `<ul>
+                    <li><strong>Character:</strong> Army Values, empathy, Warrior/Service Ethos, discipline</li>
+                    <li><strong>Presence:</strong> bearing, fitness, confidence, resilience</li>
+                    <li><strong>Intellect:</strong> mental agility, sound judgment, innovation, interpersonal tact, expertise</li>
+                </ul>`
+            },
+            {
+                front: "What are the three categories of Core Leader Competencies?",
+                back: `<ul>
+                    <li><strong>LEADS:</strong> leads others, builds trust, extends influence, leads by example, communicates</li>
+                    <li><strong>DEVELOPS:</strong> creates positive environment, prepares self, develops others, stewards profession</li>
+                    <li><strong>ACHIEVES:</strong> gets results</li>
+                </ul>`
+            },
+            {
+                front: "What are the four fundamentals of developing leaders?",
+                back: `<ul>
+                    <li><strong>Setting Conditions:</strong> Create learning environment, know subordinates</li>
+                    <li><strong>Providing Feedback:</strong> Observe, assess, deliver constructive feedback</li>
+                    <li><strong>Enhancing Learning:</strong> Use role models, mentoring, guided discovery</li>
+                    <li><strong>Creating Opportunities:</strong> Challenging experiences, succession planning</li>
+                </ul>`
+            },
+            {
+                front: "What does the SOAR format stand for and when is it used?",
+                back: "<strong>S</strong>ituation - <strong>O</strong>bservation - <strong>A</strong>ssociate/Assess - <strong>R</strong>einforce/Recommend<br><br>Used for capturing observations and providing structured feedback to subordinates during leader development."
+            },
+            {
+                front: "What are the four phases of the Self-Development process?",
+                back: `<ul>
+                    <li><strong>1.</strong> Strengths and Developmental Needs Determination</li>
+                    <li><strong>2.</strong> Goal Setting</li>
+                    <li><strong>3.</strong> Self-Enhanced Learning</li>
+                    <li><strong>4.</strong> Learning in Action</li>
+                </ul>`
+            },
+            {
+                front: "What is Mission Command and how does it relate to leader development?",
+                back: "The exercise of authority and direction by commander using mission orders to enable disciplined initiative within commander's intent. Leader development must prepare leaders to execute mission command by building competencies like trust, shared understanding, and disciplined initiative."
+            },
+            {
+                front: "What is an Individual Development Plan (IDP)?",
+                back: "A personal development planning tool that documents goals, milestones, and developmental activities. Tracked through Army Career Tracker (ACT) and updated through regular counseling sessions to guide individual leader growth."
+            },
+            {
+                front: "What are the Army Values that form the foundation of character?",
+                back: `<ul>
+                    <li><strong>L</strong>oyalty</li>
+                    <li><strong>D</strong>uty</li>
+                    <li><strong>R</strong>espect</li>
+                    <li><strong>S</strong>elfless Service</li>
+                    <li><strong>H</strong>onor</li>
+                    <li><strong>I</strong>ntegrity</li>
+                    <li><strong>P</strong>ersonal Courage</li>
+                </ul>`
+            },
+            {
+                front: "What is Multi-Source Assessment and Feedback (MSAF)?",
+                back: "A 360-degree feedback tool that collects anonymous input from superiors, peers, and subordinates to assess leadership competencies. Provides objective data on strengths and developmental needs for both individuals and organizations."
+            },
+            {
+                front: "What are the six major leadership transitions across organizational levels?",
+                back: `<ul>
+                    <li><strong>1.</strong> Leading at Direct Level</li>
+                    <li><strong>2.</strong> Leading Organizations</li>
+                    <li><strong>3.</strong> Leading Functions</li>
+                    <li><strong>4.</strong> Leading Integration</li>
+                    <li><strong>5.</strong> Leading Large Organizations</li>
+                    <li><strong>6.</strong> Leading Enterprise</li>
+                </ul>`
+            },
+            {
+                front: "What is Mentorship according to Army doctrine?",
+                back: "The voluntary developmental relationship between a person of greater experience and lesser experience, characterized by mutual trust and respect. Should occur outside chain of command and be self-selected rather than assigned."
+            },
+            {
+                front: "What are the three levels of proficiency in the Performance Indicators framework?",
+                back: `<ul>
+                    <li><strong>Developmental Need:</strong> Does not demonstrate the competency</li>
+                    <li><strong>Standard:</strong> Meets expected performance level</li>
+                    <li><strong>Strength:</strong> Exceeds standard, demonstrates excellence</li>
+                </ul>`
+            },
+            {
+                front: "What are the three types of leader development activities?",
+                back: `<ul>
+                    <li><strong>Formal:</strong> Required by policy/regulation (evaluations, counseling)</li>
+                    <li><strong>Semiformal:</strong> Commonly practiced, doctrinally addressed (AAR, professional development)</li>
+                    <li><strong>Informal:</strong> Learning-focused opportunities (coaching, peer discussions)</li>
+                </ul>`
+            },
+            {
+                front: "What is the difference between Critical Thinking and Creative Thinking?",
+                back: "<strong>Critical Thinking:</strong> Analytical, cautious, convergent judgment that checks sensibility and relationships<br><br><strong>Creative Thinking:</strong> Generative, daring, divergent thinking that considers new possibilities and innovative solutions"
+            },
+            {
+                front: "What is Adaptability and why is it important for Army leaders?",
+                back: "Effective change in behavior in response to altered or unexpected situations. Critical due to rapid pace of world events and dynamic military operations. Requires broad knowledge, diverse skills, and comfort with ambiguity."
+            },
+            {
+                front: "What is the five-step process for developing Unit Leader Development Programs?",
+                back: `<ul>
+                    <li><strong>Understand:</strong> Assess current state</li>
+                    <li><strong>Visualize:</strong> Establish desired end state</li>
+                    <li><strong>Plan:</strong> Structure activities and schedules</li>
+                    <li><strong>Execute:</strong> Implement with disciplined initiative</li>
+                    <li><strong>Assess:</strong> Evaluate against goals and adjust</li>
+                </ul>`
+            },
+            {
+                front: "What are the characteristics of effective teams vs. ineffective teams?",
+                back: "<strong>Effective:</strong> Share information, hold shared vision, act as team vs. individuals, show appreciation, enforce discipline<br><br><strong>Ineffective:</strong> Fail to listen, compete vs. cooperate, argue publicly, focus on self-interest, give less than full effort"
+            },
+            {
+                front: "What is the relationship between the Army Values and ethical leadership?",
+                back: "Army Values provide the moral foundation for ethical decision-making. Leaders demonstrate character by consistently applying these values, especially when choosing the 'tougher right over the easier wrong' in complex situations. This builds trust and sets the example for subordinates."
+            }
+        ];
+
+        let currentCard = 0;
+        let isFlipped = false;
+        let isQuizMode = false;
+        let quizScore = 0;
+        let quizTotal = 0;
+
+        function updateCard() {
+            console.log("Updating card:", currentCard); // Debug log
+            const card = flashcards[currentCard];
+            const frontContent = document.getElementById('frontContent');
+            const backContent = document.getElementById('backContent');
+            const cardNumber = document.getElementById('cardNumber');
+            const cardNumberBack = document.getElementById('cardNumberBack');
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+
+            if (frontContent) frontContent.innerHTML = `<h3>${card.front}</h3>`;
+            if (backContent) backContent.innerHTML = card.back;
+            if (cardNumber) cardNumber.textContent = `${currentCard + 1}/20`;
+            if (cardNumberBack) cardNumberBack.textContent = `${currentCard + 1}/20`;
+            if (progressText) progressText.textContent = `Card ${currentCard + 1} of 20`;
+            if (progressFill) progressFill.style.width = `${((currentCard + 1) / 20) * 100}%`;
+
+            // Reset flip state
+            const flashcard = document.getElementById('flashcard');
+            if (flashcard) {
+                flashcard.classList.remove('flipped');
+                isFlipped = false;
+            }
+        }
+
+        function flipCard() {
+            console.log("Flip card called"); // Debug log
+            const flashcard = document.getElementById('flashcard');
+            if (flashcard) {
+                flashcard.classList.toggle('flipped');
+                isFlipped = !isFlipped;
+                console.log("Card flipped, isFlipped:", isFlipped); // Debug log
+            }
+        }
+
+        function nextCard() {
+            console.log("Next card called, current:", currentCard); // Debug log
+            if (currentCard < flashcards.length - 1) {
+                currentCard++;
+                updateCard();
+            } else {
+                console.log("Already at last card");
+            }
+        }
+
+        function previousCard() {
+            console.log("Previous card called, current:", currentCard); // Debug log
+            if (currentCard > 0) {
+                currentCard--;
+                updateCard();
+            } else {
+                console.log("Already at first card");
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = flashcards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [flashcards[i], flashcards[j]] = [flashcards[j], flashcards[i]];
+            }
+            currentCard = 0;
+            updateCard();
+        }
+
+        function startStudy() {
+            isQuizMode = false;
+            document.getElementById('quizMode').style.display = 'none';
+            updateCard();
+        }
+
+        function startQuiz() {
+            isQuizMode = true;
+            quizScore = 0;
+            quizTotal = 0;
+            document.getElementById('quizMode').style.display = 'block';
+            updateScore();
+            updateCard();
+        }
+
+        function markCorrect() {
+            if (isQuizMode) {
+                quizScore++;
+                quizTotal++;
+                updateScore();
+                nextCard();
+            }
+        }
+
+        function markIncorrect() {
+            if (isQuizMode) {
+                quizTotal++;
+                updateScore();
+                nextCard();
+            }
+        }
+
+        function updateScore() {
+            const percentage = quizTotal > 0 ? Math.round((quizScore / quizTotal) * 100) : 0;
+            document.getElementById('scoreDisplay').textContent = `Score: ${quizScore}/${quizTotal} (${percentage}%)`;
+        }
+
+        function resetProgress() {
+            currentCard = 0;
+            quizScore = 0;
+            quizTotal = 0;
+            updateCard();
+            updateScore();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function (event) {
+            switch (event.key) {
+                case ' ':
+                case 'Enter':
+                    event.preventDefault();
+                    flipCard();
+                    break;
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    previousCard();
+                    break;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    nextCard();
+                    break;
+                case '1':
+                    if (isQuizMode) markCorrect();
+                    break;
+                case '2':
+                    if (isQuizMode) markIncorrect();
+                    break;
+            }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("DOM loaded, initializing..."); // Debug log
+            updateCard();
+
+            // Add click event to flashcard
+            const flashcard = document.getElementById('flashcard');
+            if (flashcard) {
+                flashcard.addEventListener('click', flipCard);
+                console.log("Click event added to flashcard");
+            }
+        });
+    </script>
+</body>
+
+</html>
